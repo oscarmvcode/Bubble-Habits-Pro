@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Bubble Habits Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+
+<style>
+body{
+  margin:0;
+  height:100vh;
+  overflow:hidden;
+  background:radial-gradient(circle at top,#0d6efd,#020b25);
+  font-family:'Segoe UI',sans-serif;
+}
+
+h1{
+  text-align:center;
+  padding:10px;
+  font-weight:800;
+  letter-spacing:2px;
+  color:#fff;
+  font-size:1.4rem;
+}
+
+#ocean{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+}
+
+.bubble{
+  position:absolute;
+  border-radius:50%;
+  cursor:pointer;
+  transition: width .3s, height .3s, transform .2s, opacity .4s;
+}
+
+.bubble.shake{
+  animation:shake .5s;
+}
+
+@keyframes shake{
+  0%{transform:translate(0,0)}
+  20%{transform:translate(-5px,0)}
+  40%{transform:translate(5px,0)}
+  60%{transform:translate(-5px,0)}
+  80%{transform:translate(5px,0)}
+  100%{transform:translate(0,0)}
+}
+
+.controls{
+  position:fixed;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:8px;
+  z-index:5;
+}
+
+.controls .btn{
+  font-size:0.9rem;
+  padding:6px 10px;
+}
+
+#dashboard{
+  position:fixed;
+  inset:0;
+  background:#000d;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10;
+  padding:10px;
+  overflow:auto;
+}
+
+#dashBox{
+  background:#111;
+  border-radius:15px;
+  padding:15px;
+  width:95%;
+  max-width:600px;
+  color:#fff;
+}
+
+#dashBox h4{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+#dashBox .close-btn{
+  font-size:1.2rem;
+  cursor:pointer;
+  color:#fff;
+}
+
+.habit-card{
+  background:#222;
+  border-radius:10px;
+  padding:10px;
+  margin-bottom:10px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  box-shadow:0 0 10px #0008;
+}
+.habit-name{
+  width:100%;
+  white-space:normal;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+  line-height:1.25;
+  font-size:0.9rem;
+}
+
+.habit-card .header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.habit-card .header{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  flex-wrap:wrap;          
+}
+.habit-card .header > div:last-child{
+  font-size:0.75rem;
+  opacity:0.7;
+}
+.habit-card .header > div:nth-child(2){
+  flex:1 1 100%;           
+  min-width:0;
+}
+.habit-card .header .color-box{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+}
+
+.habit-card .stats{
+  display:flex;
+  justify-content:space-between;
+  font-size:0.8rem;
+}
+#helpPanel{
+  position:fixed;
+  inset:0;
+  background:#000d;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:11;
+  padding:10px;
+}
+
+#helpBox{
+  background:#111;
+  border-radius:15px;
+  padding:15px;
+  width:95%;
+  max-width:600px;
+  color:#fff;
+  box-shadow:0 0 20px #000;
+}
+
+#helpBox p{
+  font-size:0.9rem;
+  line-height:1.4;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🫧 BUBBLE HABITS</h1>
+<div id="ocean"></div>
+
+<div class="controls">
+  <button class="btn btn-light" onclick="openCreate()">➕ Hábito</button>
+  <button class="btn btn-warning" onclick="toggleDashboard()">📊 Dashboard</button>
+  <button class="btn btn-info" onclick="toggleHelp()">ℹ️ Ayuda</button>
+  <button id="installBtn" class="btn btn-success d-none">
+  ⬇️ Instalar App
+</button>
+</div>
+
+<div id="dashboard" onclick="closeDashboard(event)">
+  <div id="dashBox">
+    <h4>
+      Dashboard
+      <span class="close-btn" onclick="dashboard.style.display='none'">&times;</span>
+    </h4>
+    <!-- 🔴 BOTÓN BORRAR TODO -->
+  <button class="btn btn-danger btn-sm mb-2 w-100" onclick="clearDashboard()">
+    🗑️ Borrar todos los hábitos
+  </button>
+    <div id="cardsContainer" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+
+
+<div id="helpPanel" onclick="closeHelp(event)">
+  <div id="helpBox">
+    <h4>
+      🫧 Bubble Habits
+      <span class="close-btn" onclick="helpPanel.style.display='none'">&times;</span>
+    </h4>
+
+    <p><strong>¿Qué es?</strong><br>
+    Bubble Habits te ayuda a construir hábitos usando burbujas visuales.</p>
+
+    <p><strong>Cómo funciona</strong><br>
+    • 1 click permitido por período<br>
+    • Cumplir hace crecer la burbuja<br>
+    • Fallar le quita tamaño</p>
+
+    <p><strong>Tipos</strong><br>
+    • Minutos → hábitos rápidos<br>
+    • Horas → hábitos medios<br>
+    • Días → hábitos largos</p>
+
+    <p><strong>Beneficios</strong><br>
+    • Más constancia<br>
+    • Menos procrastinación<br>
+    • Progreso visible</p>
+
+    <p><strong>Dashboard</strong><br>
+    Visualiza y gestiona todos tus hábitos.</p>
+  </div>
+</div>
+
+
+
+
+
+
+
+<div class="modal fade" id="habitModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title">Nuevo hábito</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Nombre</label>
+<input id="hName" class="form-control mb-2" oninput="validateHabitName(this)">
+<small id="habitError" class="text-danger d-none"></small>
+<br>
+
+        <label class="form-label">Tipo</label>
+        <select id="hType" class="form-select mb-2">
+          <option value="minute">Minutos</option>
+          <option value="hour">Horas</option>
+          <option value="day">Días</option>
+        </select>
+
+        <label class="form-label">Meta (cantidad)</label>
+        <input id="hGoal" type="number" min="1" class="form-control">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-success" onclick="createHabit()">Crear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const PERIODS = {minute:60000,hour:3600000,day:86400000};
+const INITIAL_SIZE=80;
+const COLORS = [
+  "#0d6efd", "#20c997", "#ffc107", "#dc3545", "#6f42c1", "#0dcaf0", "#fd7e14",
+
+  "#198754", "#6610f2", "#d63384", "#fd9843", "#20c997", "#6f42c1", "#0dcaf0",
+  "#adb5bd", "#495057", "#343a40", "#212529", "#e83e8c", "#fd7e14",
+
+  "#ff6b6b", "#feca57", "#48dbfb", "#1dd1a1", "#5f27cd",
+  "#ff9f43", "#10ac84", "#576574", "#222f3e", "#c8d6e5",
+
+  "#54a0ff", "#00d2d3", "#01a3a4", "#2e86de", "#341f97",
+  "#ee5253", "#f368e0", "#ff9ff3", "#00a8ff", "#9c88ff"
+];
+
+const MAX_COLOR_USAGE=4;
+const hName = document.getElementById("hName");
+const hType = document.getElementById("hType");
+const hGoal = document.getElementById("hGoal");
+
+// 🔴 PERSISTENCIA LOCAL
+function saveHabits(){
+  const data = habits.map(h => ({
+    name: h.name,
+    type: h.type,
+    goal: h.goal,
+    completed: h.completed,
+    failed: h.failed,
+    start: h.start,
+    clicksThisUnit: h.clicksThisUnit,
+unitPassed: h.unitPassed,
+    end: h.end,
+    lastAction: h.lastAction,
+    size: h.size,
+    life: h.life,
+    color: h.color,
+    x: h.x,
+    y: h.y,
+    vx: h.vx,
+    vy: h.vy
+  }));
+  localStorage.setItem("bubbleHabits", JSON.stringify(data));
+}
+
+function loadHabits(){
+  const data = JSON.parse(localStorage.getItem("bubbleHabits") || "[]");
+  data.forEach(d => {
+
+  // 🔴 NO revivir burbujas muertas
+  if(d.end && d.life <= 0) {
+    habits.push(d); // solo para dashboard
+    return;
+  }
+
+  const h = new Habit(d.name, d.type, d.goal);
+  Object.assign(h, d);
+
+  const now = Date.now();
+const elapsed = now - h.lastAction;
+
+if (elapsed < h.period) {
+  h.clicksThisUnit = 1;   // bloquea click
+  h.unitPassed = true;   // ya se usó el cupo
+}
+
+
+  // reaplicar color
+  h.el.style.background = `radial-gradient(circle at 30% 30%, #fff5, ${h.color})`;
+  h.el.style.boxShadow = `0 0 15px ${h.color}`;
+
+  h.updateSize();
+  habits.push(h);
+});
+
+}
+
+
+class Habit{
+  constructor(name,type,goal){
+    this.name=name;
+    this.type=type;
+    this.goal=goal;
+    this.completed=0;
+    this.failed=0;
+    this.start=new Date();
+    this.end=null;
+    this.period=PERIODS[type];
+    this.lastAction=Date.now();
+    this.size=INITIAL_SIZE;
+    this.maxSize=this.size*1.5;
+    this.life=1; 
+    this.clicksThisUnit=0;
+    this.unitPassed=false;
+    this.color=this.getRandomColor();
+    this.x=Math.random()*(innerWidth-100);
+    this.y=Math.random()*(innerHeight-150);
+    this.vx=(Math.random()*1.2)+0.3;
+    this.vy=(Math.random()*1.2)+0.3;
+    this.create();
+  }
+
+  // 🔴 CAMBIO COLOR: color único por hábito (no se repite)
+getRandomColor(){
+  const usedColors = habits.map(h=>h.color);
+  const available = COLORS.filter(c => !usedColors.includes(c));
+  return available.length
+    ? available[Math.floor(Math.random()*available.length)]
+    : COLORS[Math.floor(Math.random()*COLORS.length)];
+}
+
+  create(){
+    this.el=document.createElement("div");
+    this.el.className="bubble";
+    this.el.style.background=`radial-gradient(circle at 30% 30%, #fff5, ${this.color})`;
+    this.el.style.boxShadow=`0 0 15px ${this.color}`;
+    this.updateSize();
+    this.el.onclick=()=>this.click();
+    this.el.ontouchstart=()=>this.click();
+    ocean.appendChild(this.el);
+  }
+
+  updateSize(){ this.el.style.width=this.el.style.height=this.size+"px"; }
+
+  move(){
+    this.el.style.opacity="1";
+    this.x+=this.vx;
+    this.y+=this.vy;
+    if(this.x<0||this.x>innerWidth-this.size) this.vx*=-1;
+    if(this.y<60||this.y>innerHeight-this.size) this.vy*=-1;
+    this.el.style.left=this.x+"px";
+    this.el.style.top=this.y+"px";
+  }
+
+  click(){
+    if(this.end || this.completed>=this.goal) return;
+    if(this.clicksThisUnit>=1){ this.shake(); return; }
+    this.clicksThisUnit++;
+    this.unitPassed=true;
+    this.completed++;
+    this.life++;
+    const growStep=(this.maxSize-INITIAL_SIZE)/this.goal;
+    this.size=Math.min(this.maxSize,this.size+growStep);
+    this.updateSize();
+    if(this.completed>=this.goal) this.end=new Date();
+
+    saveHabits();
+
+  }
+
+  resetUnit(){
+    if(this.completed>=this.goal){ this.unitPassed=true; return; }
+    if(!this.unitPassed){
+      this.life--;
+      this.failed++;
+      if(this.life<=0){ this.explode(); return; }
+    }
+    this.unitPassed=false;
+    this.clicksThisUnit=0;
+
+    saveHabits();
+
+  }
+
+  explode(){
+    this.end=new Date();
+    this.el.style.opacity="0";
+    setTimeout(()=>this.el.remove(),400);
+
+    saveHabits();
+
+  }
+
+  shake(){
+    this.el.classList.add("shake");
+    setTimeout(()=>this.el.classList.remove("shake"),500);
+  }
+}
+
+function clearDashboard(){
+  if(!confirm("¿Seguro que deseas borrar todos los hábitos?")) return;
+
+  // 1️⃣ borrar persistencia
+  localStorage.removeItem("bubbleHabits");
+
+  // 2️⃣ eliminar burbujas vivas del DOM
+  habits.forEach(h => {
+    if(h.el) h.el.remove();
+  });
+
+  // 3️⃣ limpiar estado en memoria
+  habits.length = 0;
+
+  // 4️⃣ limpiar dashboard
+  cardsContainer.innerHTML = "";
+}
+
+
+const ocean=document.getElementById("ocean");
+const habits=[];
+loadHabits(); // 🔴 CARGA DESDE localStorage (AQUÍ)
+let modal=new bootstrap.Modal(document.getElementById("habitModal"));
+const dashboard=document.getElementById("dashboard");
+const cardsContainer=document.getElementById("cardsContainer");
+
+
+function openCreate(){ modal.show(); }
+
+function createHabit() {
+  const name = hName.value.trim();
+  const type = hType.value;
+  const goal = parseInt(hGoal.value);
+
+  // 1. Validar si está vacío primero
+  if (!name) {
+    showHabitError("El nombre no puede estar vacío.");
+    hName.focus();
+    return;
+  }
+
+  // 2. Ejecutar la validación de reglas (caracteres, repetidos, etc.)
+  if (!validateHabitName(hName)) {
+    hName.focus(); 
+    return;
+  }
+
+  // 3. Validar la meta
+  if (isNaN(goal) || goal <= 0) {
+    alert("Debes ingresar una meta válida.");
+    return;
+  }
+
+  // 4. Validar máximo de palabras
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length > 5) {
+    showHabitError("Máximo 5 palabras.");
+    hName.focus();
+    return;
+  }
+
+  // Si todo está bien, crear
+  habits.push(new Habit(name, type, goal));
+  hName.value = "";
+  hGoal.value = "";
+  hideHabitError();
+  modal.hide();
+  saveHabits();
+}
+
+
+
+
+setInterval(()=>habits.forEach(h => h.move && h.move()),16);
+
+setInterval(()=>{
+  const now=Date.now();
+  habits.forEach(h=>{
+    if(!h.end && now-h.lastAction>=h.period){
+      h.lastAction=now;
+      h.resetUnit();
+    }
+  });
+},1000);
+
+function toggleDashboard(){
+  dashboard.style.display="flex";
+  renderDashboard();
+}
+
+function closeDashboard(e){
+  if(e.target.id==="dashboard"){dashboard.style.display="none";}
+}
+
+function renderDashboard(){
+  cardsContainer.innerHTML="";
+  habits.forEach(h=>{
+    const card=document.createElement("div");
+    card.className="habit-card";
+    card.innerHTML=`
+      <div class="header">
+        <div class="color-box" style="background:${h.color}"></div>
+        <div><div class="habit-name">${h.name}</div></div>
+        <div>${h.end? new Date(h.end).toLocaleString():"—"}</div>
+      </div>
+      <div class="stats">
+  <div>Meta: ${h.goal} ${h.type === "minute" ? "minutos" : h.type === "hour" ? "horas" : "días"}</div>
+  <div>✔ ${h.completed}</div>
+  <div>✖ ${h.failed}</div>
+</div>`;
+    cardsContainer.appendChild(card);
+  });
+}
+const helpPanel = document.getElementById("helpPanel");
+
+function toggleHelp(){
+  helpPanel.style.display = "flex";
+}
+
+function closeHelp(e){
+  if(e.target.id === "helpPanel"){
+    helpPanel.style.display = "none";
+  }
+}
+function validateHabitName(input) {
+  const value = input.value.trim();
+
+  const invalidChars = /[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-.,]/;
+  const repeated = /(.)\1{4,}/;
+
+  if (value.length > 40) {
+    showHabitError("Máximo 40 caracteres.");
+    return false;
+  }
+
+  if (invalidChars.test(value)) {
+    showHabitError("Caracteres no permitidos.");
+    return false;
+  }
+
+  if (repeated.test(value)) {
+    showHabitError("Texto no válido o repetitivo.");
+    return false;
+  }
+
+  hideHabitError();
+  return true;
+}
+
+function showHabitError(msg) {
+  const error = document.getElementById("habitError");
+  error.textContent = msg;
+  error.classList.remove("d-none");
+  hName.classList.add("is-invalid");
+  
+  // Agregar un pequeño efecto visual de vibración al input
+  hName.classList.add("shake");
+  setTimeout(() => hName.classList.remove("shake"), 500);
+}
+
+function hideHabitError() {
+  const error = document.getElementById("habitError");
+  error.textContent = "";
+  error.classList.add("d-none");
+  hName.classList.remove("is-invalid");
+}
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+let deferredPrompt;
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault(); // evita que Chrome lo muestre solo
+  deferredPrompt = e;
+  installBtn.classList.remove("d-none");
+});
+
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+  const result = await deferredPrompt.userChoice;
+
+  if (result.outcome === "accepted") {
+    console.log("Usuario instaló la app");
+  } else {
+    console.log("Usuario canceló la instalación");
+  }
+
+  deferredPrompt = null;
+  installBtn.classList.add("d-none");
+});
+
+</script>
+</body>
+</html>

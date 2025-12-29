@@ -86,8 +86,10 @@ h1{
   width:95%;
   max-width:600px;
   color:#fff;
+  display:flex;
+  flex-direction:column;
+  max-height:90vh;
 }
-
 #dashBox h4{
   display:flex;
   justify-content:space-between;
@@ -99,6 +101,11 @@ h1{
   font-size:1.2rem;
   cursor:pointer;
   color:#fff;
+}
+#dashBox button{
+  position:sticky;
+  bottom:0;
+  z-index:5;
 }
 
 .habit-card{
@@ -118,6 +125,11 @@ h1{
   overflow-wrap:anywhere;
   line-height:1.25;
   font-size:0.9rem;
+}
+
+#cardsContainer{
+  flex:1;
+  overflow-y:auto;
 }
 
 .habit-card .header{

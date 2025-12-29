@@ -1,4 +1,4 @@
-const CACHE_NAME = "bubble-habits-v3"; // Incrementa esto cada vez que hagas cambios grandes
+const CACHE_NAME = "bubble-habits-v3"; 
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const FILES_TO_CACHE = [
   "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 ];
 
-// INSTALACIÓN - Se mantiene igual
+// INSTALACIÓN 
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -36,7 +36,7 @@ self.addEventListener("activate", event => {
 });
 
 // FETCH MEJORADO: Estrategia "Network First"
-// Esto soluciona tu problema: primero intenta red, si falla usa caché.
+// primero intenta red, si falla usa caché.
 self.addEventListener("fetch", event => {
   event.respondWith(
     fetch(event.request)
@@ -52,4 +52,5 @@ self.addEventListener("fetch", event => {
         return caches.match(event.request);
       })
   );
+
 });

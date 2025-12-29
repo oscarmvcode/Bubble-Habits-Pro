@@ -338,11 +338,7 @@ function loadHabits(){
 
   const now = Date.now();
 const elapsed = now - h.lastAction;
-
-if (elapsed < h.period) {
-  h.clicksThisUnit = 1;   // bloquea click
-  h.unitPassed = true;   // ya se usó el cupo
-}
+
 
 
   // reaplicar color
